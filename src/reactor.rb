@@ -218,34 +218,3 @@ end
 
 class ReactorException < StandardError
 end
-
-if __FILE__ == $0
-  trap('INT') do
-    puts "why did you have to press CTRL+C? why? why?"
-    puts "off to the darkness.. again!"
-    exit
-  end
-  require 'socket'
-  port = (ARGV[0] || 3333).to_i
-  puts ">> Reactor library version 1.0 ()"
-  puts ">> This is an interactive test"
-  puts ">> The console will echo everything you type"
-  puts ">> At the same time it will *secretly* listen"
-  puts ">> to connections on port #{port} and send"
-  puts ">> all that you wrote to whoever asks for it"
-  puts ">> Have fun.."
-  buffer = ""
-  reactor = Reactor::Dispatcher.new
-  server = TCPServer.new("0.0.0.0", port)
-  reactor.attach_handler(:read, server) do |server|
-    conn = server.accept
-    conn.write("HTTP/1.1 200 OK\r\nContent-Length:#{buffer.length}\r\nContent-Type:text/plain\r\n\r\n#{buffer}")
-    conn.close
-  end
-  reactor.attach_handler(:read, STDIN) do
-    data = gets
-    puts data
-    buffer << data
-  end
-  reactor.run
-end
