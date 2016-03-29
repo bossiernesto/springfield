@@ -1,4 +1,7 @@
+require 'rspec'
 require_relative '../src/reactor'
+
+
 
 describe 'test reactor core' do
 
