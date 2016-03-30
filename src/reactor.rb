@@ -1,5 +1,6 @@
 require 'thread'
 
+QUANTUM = 10 #Time in milliseconds
 
 module Reactor
 
@@ -116,11 +117,12 @@ module Reactor
 
   class Dispatcher
 
-    attr_accessor :running, :handler_manager_read, :handler_manager_write, :on_attach, :on_detach, :ios
+    attr_accessor :running, :handler_manager_read, :handler_manager_write, :handler_manager_error, :on_attach, :on_detach, :ios
 
     def initialize
       self.handler_manager_read = EventHandlerManager.new :read
       self.handler_manager_write = EventHandlerManager.new :write
+      self.handler_manager_error = EventHandlerManager.new :error
       self.running = true
       self.ios= []
     end
@@ -138,12 +140,14 @@ module Reactor
     end
 
     def run_cycle
-      read_ios, dirty_read_ios = get_events_for :read
-      write_ios, dirty_write_ios = get_events_for :write
-      event = IO.select(read_ios, write_ios, nil, 0.005)
+      read_ios, _dirty_read_ios = get_events_for :read
+      write_ios, _dirty_write_ios = get_events_for :write
+      error_ios, _dirty_error_ios = get_events_for :error
+      event = IO.select(read_ios, write_ios, error_ios, 0.001 * QUANTUM)
       if event
         fire_events :read, event[0]
         fire_events :write, event[1]
+        fire_events :error, event[2]
       end
     end
 
@@ -205,7 +209,7 @@ module Reactor
     end
 
     def check_valid_mode(mode)
-      unless [:read, :write].include? mode
+      unless [:read, :write, :error].include? mode
         raise ReactorException, "Mode #{mode} is not a valid one."
       end
     end
