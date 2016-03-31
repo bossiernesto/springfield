@@ -4,8 +4,8 @@ buffer = ''
 port = 46473
 server = TCPServer.new("0.0.0.0", port)
 reactor = Reactor::Dispatcher.new
-reactor.attach_handler(:read, server) do |server|
-  conn = server.accept
+reactor.attach_handler(:read, server) do |my_server|
+  conn = my_server.accept
   conn.write("HTTP/1.1 200 OK\r\nContent-Length:#{buffer.length}\r\nContent-Type:text/plain\r\n\r\n#{buffer}")
   conn.close
 end

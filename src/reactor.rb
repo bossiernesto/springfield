@@ -1,25 +1,16 @@
 require 'thread'
+require_relative '../src/orderedarray'
 
-QUANTUM = 10 #Time in milliseconds
+DEFAULT_QUANTUM = 10 #Time in milliseconds
 
 module Reactor
 
-  class Event
-    attr_accessor :io, :callbacks, :status, :valid_statuses
+  class BaseEvent
+    attr_accessor :status, :valid_statuses, :callbacks
 
-    def initialize(io, &callback)
-      self.io = io
-      self.callbacks = [callback] if callback
+    def initialize_status
       self.status = :clean
       self.valid_statuses = [:clean, :dirty]
-    end
-
-    def get_callback
-      self.callbacks[0]
-    end
-
-    def callbacks
-      @callbacks ||= []
     end
 
     def is_dirty?
@@ -33,13 +24,12 @@ module Reactor
       self.status = status
     end
 
-    def add_callback(wait_if_attached, &callback)
-      unless wait_if_attached
-        self.callbacks = [callback]
-        self.change_status :dirty
-        return
-      end
-      self.callbacks << callback
+    def get_callback
+      self.callbacks[0]
+    end
+
+    def callbacks
+      @callbacks ||= []
     end
 
     def has_callbacks?
@@ -48,6 +38,38 @@ module Reactor
 
     def remove_last_callback
       self.callbacks.delete self.callbacks[-1]
+    end
+  end
+
+  class TaskEvent < BaseEvent
+    attr_accessor :block
+
+    def initialize(&block)
+      self.callbacks = [block]
+    end
+
+    def add_callback(&block)
+      self.callbacks << block
+    end
+
+  end
+
+  class Event < BaseEvent
+    attr_accessor :io, :status, :valid_statuses
+
+    def initialize(io, &callback)
+      self.io = io
+      self.callbacks = [callback] if callback
+      self.initialize_status
+    end
+
+    def add_callback(wait_if_attached, &callback)
+      unless wait_if_attached
+        self.callbacks = [callback]
+        self.change_status :dirty
+        return
+      end
+      self.callbacks << callback
     end
 
   end
@@ -117,19 +139,28 @@ module Reactor
 
   class Dispatcher
 
-    attr_accessor :running, :handler_manager_read, :handler_manager_write, :handler_manager_error, :on_attach, :on_detach, :ios
+    attr_accessor :running, :handler_manager_read, :handler_manager_write, :handler_manager_error, :handler_manager_tasks, :on_attach, :on_detach, :ios, :quantum
 
     def initialize
       self.handler_manager_read = EventHandlerManager.new :read
       self.handler_manager_write = EventHandlerManager.new :write
       self.handler_manager_error = EventHandlerManager.new :error
+      self.handler_manager_tasks = EventHandlerManager.new :tasks
       self.running = true
       self.ios= []
+      self.quantum = DEFAULT_QUANTUM
     end
 
 
     def is_running?
       running
+    end
+
+    def change_timeout_reactor(new_timeout)
+      unless new_timeout.is_a? Integer
+        raise ReactorException, 'Can not add a non integer value as a timeout'
+      end
+      self.quantum = new_timeout
     end
 
     def run
@@ -143,12 +174,13 @@ module Reactor
       read_ios, _dirty_read_ios = get_events_for :read
       write_ios, _dirty_write_ios = get_events_for :write
       error_ios, _dirty_error_ios = get_events_for :error
-      event = IO.select(read_ios, write_ios, error_ios, 0.001 * QUANTUM)
+      event = IO.select(read_ios, write_ios, error_ios, 0.001 * self.quantum)
       if event
         fire_events :read, event[0]
         fire_events :write, event[1]
         fire_events :error, event[2]
       end
+      fire_task_events
     end
 
 
@@ -191,6 +223,13 @@ module Reactor
       handler_manager.get_events_io
     end
 
+    def fire_task_events
+      handler_manager = get_handler_manager :tasks
+      handler_manager.events.each do |event|
+        event.get_callback.execute
+      end
+    end
+
     def fire_events mode, ios
       handler_manager = get_handler_manager mode
       ios.each do |io|
@@ -201,15 +240,15 @@ module Reactor
     end
 
     def process_ios
-      ios.each{|io| self.process_io io}.clear
+      ios.each { |io| self.process_io io }.clear
     end
 
     def process_io(io)
-      io[1].call io[0],self
+      io[1].call io[0], self
     end
 
     def check_valid_mode(mode)
-      unless [:read, :write, :error].include? mode
+      unless [:read, :write, :error, :tasks].include? mode
         raise ReactorException, "Mode #{mode} is not a valid one."
       end
     end

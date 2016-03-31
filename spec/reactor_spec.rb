@@ -18,7 +18,4 @@ describe 'test reactor core' do
     expect(buffer).to eq('Hola Mundo!')
   end
 
-
-
-
 end
