@@ -1,9 +1,13 @@
 require_relative '../src/reactor'
 require 'socket'
+require_relative '../src/reporter'
+
 buffer = ''
 port = 46473
-server = TCPServer.new("0.0.0.0", port)
-reactor = Reactor::Dispatcher.new
+host = "0.0.0.0"
+server = TCPServer.new(host, port)
+Reactor::Reporter.report_info "Stating TCP Server on port #{port} at host #{host} "
+reactor = Reactor::Dispatcher.new true
 reactor.attach_handler(:read, server) do |my_server|
   conn = my_server.accept
   conn.write("HTTP/1.1 200 OK\r\nContent-Length:#{buffer.length}\r\nContent-Type:text/plain\r\n\r\n#{buffer}")
