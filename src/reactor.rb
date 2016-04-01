@@ -159,13 +159,22 @@ module Reactor
 
     def initialize(debug=false, quantum=DEFAULT_QUANTUM)
       self.debug = debug
+      #State for manager lists
       self.handler_manager_read = EventHandlerManager.new :read, debug = self.debug
       self.handler_manager_write = EventHandlerManager.new :write, debug = self.debug
       self.handler_manager_error = EventHandlerManager.new :error, debug = self.debug
       self.handler_manager_tasks = EventHandlerManager.new :tasks, debug=self.debug, io_allowed=false
-      self.running = true
+
+      #process queue
       self.ios= []
+
+      #Other state for reactor dispatcher
+      self.running = true
       self.quantum = quantum
+
+      #Set up the listeners
+      self.on_attach = []
+      self.on_detach = []
     end
 
     def is_running?
@@ -214,7 +223,7 @@ module Reactor
 
     def attach_io(handler, mode, io, wait_if_attached = true, &callback)
       handler.attach_io io, wait_if_attached, &callback
-      self.on_attach.call(mode, io) if self.on_attach
+      self.process_on_attach mode, io if self.has_listeners self.on_attach
     end
 
     def attach_handler(mode, io=nil, wait_if_attached = true, &callback)
@@ -245,8 +254,8 @@ module Reactor
 
       self.report_system "Detaching handler #{handler}"
       handler_manager.detach handler, force
-      self.on_detach.call(mode, io) if self.on_detach
 
+      self.process_on_detach mode, io if self.has_listeners self.on_detach
     end
 
     def detach_all_handlers(mode)
@@ -313,13 +322,78 @@ module Reactor
       Reactor::Reporter.report_system msg if self.debug
     end
 
+
+    #Methods for managing the listeners
+    def has_listeners(listener_list)
+      listener_list.length > 0
+    end
+
+    def add_detach_listener(name, run_once=false, &block)
+      listener = Listener.new name, run_once, &block
+      self.on_detach << listener
+    end
+
+    def add_attach_listener(name, run_once=false, &block)
+      listener = Listener.new name, run_once, &block
+      self.on_attach << listener
+    end
+
+    def remove_all_attach_listeners
+      self.on_attach.clear
+    end
+
+    def remove_all_detach_listeners
+      self.on_detach.clear
+    end
+
+    def abstract_process_listeners(listener_list, mode, io=nil)
+      listener_list.each do |listener|
+        listener.call mode, io
+        listener_list.delete listener if listener.run_once?
+      end
+
+    end
+
+    def process_on_attach(mode, io=nil)
+      self.abstract_process_listeners self.on_attach, mode, io
+    end
+
+
+    def process_on_detach(mode, io=nil)
+      self.abstract_process_listeners self.on_detach, mode, io
+    end
+
+  end
+
+  class Listener
+    attr_accessor :callback, :name, :run_once
+
+    def initialize(name, run_once, &block)
+      self.name = name
+      self.run_once = run_once
+      self.callback = block
+    end
+
+    def check_block_arity &block
+      unless block.parameters.length == 2
+        msg = "Block #{block} has not 2 parameters. Listener blocks must respect the following contract proc {|mode, io| ...}"
+        Reactor::Reporter.report_error msg
+        raise ListenerException msg
+      end
+    end
+
+    def run_once?
+      self.run_once
+    end
+
+  end
+
+  class EventHandlerException < StandardError
+  end
+
+  class ReactorException < StandardError
   end
 
 end
 
 
-class EventHandlerException < StandardError
-end
-
-class ReactorException < StandardError
-end
