@@ -1,6 +1,8 @@
 require 'thread'
 require_relative '../src/orderedarray'
 require_relative '../src/reporter'
+require_relative '../src/abstract'
+require_relative '../src/reactor_exceptions'
 
 DEFAULT_QUANTUM = 10 #Time in milliseconds
 
@@ -62,6 +64,38 @@ module Reactor
       for callback in self.callbacks
         callback.call
       end
+    end
+
+  end
+
+  class TimedEvent < TaskEvent
+    attr_accessor :timers
+
+    def initialize(timer, &block)
+      self.timers = OrderedArray.new
+      self.callbacks = [block]
+    end
+
+    def execute
+      unless self.timers.all? { |timer| timer.complies }
+        return
+      end
+
+      super
+      self.timers.each { |timer| timer.consume }
+      self.timers.sort
+    end
+
+    def add_quantum_timer(quantum, repeatable=false)
+      QuantumTimer.new self, quantum, repeatable
+    end
+
+    def add_timestamp_timer(time, repeatable=false)
+      TimestampTimer.new self, time, repeatable
+    end
+
+    def add_time_timer(time, repeatable=false)
+      Timer.new self, time, repeatable
     end
 
   end
@@ -388,10 +422,94 @@ module Reactor
 
   end
 
-  class EventHandlerException < StandardError
+  class AbstractTimer
+    extend Abstract
+    include Comparable
+
+    attr_accessor :contained_in, :repeatable, :comparable_time
+
+    abstract_methods :complies
+
+    def add_to_timers
+      self.contained_in << self
+    end
+
+    def remove_from_timers
+      self.contained_in.delete self
+      self.contained_in.sort
+    end
+
+    def <=>(other)
+      self.comparable_time <=> other.comparable_time
+    end
+
+    def consume
+      contained_in.delete self unless repeatable
+    end
+
   end
 
-  class ReactorException < StandardError
+  class Timer < AbstractTimer
+    attr_accessor :fire_time, :quantum
+
+    def initialize(contained_in, fire_time, repeatable=false)
+      self.contained_in = contained_in
+      self.quantum = fire_time * 1000 #-> converting to seconds
+      self.repeatable = repeatable
+      set_next_time_of_fire
+      self.add_to_timers
+    end
+
+    def set_next_time_of_fire
+      self.fire_time = (Time.now.to_f * 1000).to_i + self.quantum
+      self.comparable_time = fire_time
+    end
+
+    def consume
+      set_next_time_of_fire if repeatable
+      super
+    end
+
+    def complies
+      (Time.now.to_f * 1000).to_i >= self.fire_time
+    end
+
+  end
+
+  class TimestampTimer < AbstractTimer
+    attr_accessor :timestamp_fire
+
+    def initialize(contained_in, timestamp_fire, repeatable=false)
+      self.contained_in = contained_in
+      self.timestamp_fire = timestamp_fire
+      self.comparable_time = timestamp_fire
+      self.repeatable = repeatable
+      self.add_to_timers
+    end
+
+    def complies
+      (Time.now.to_f * 1000).to_i >= self.timestamp_fire
+    end
+
+  end
+
+  class QuantumTimer < AbstractTimer
+    attr_accessor :quantity, :passes
+
+    def initialize(contained_in, quantity, repeatable=false)
+      self.passes = 0
+      self.comparable_time = Time.now
+      self.contained_in = contained_in
+      self.quantity if quantity.is_a? Integer
+      self.repeatable = repeatable
+      self.add_to_timers
+    end
+
+    def complies
+      self.passes += 1
+      self.passes % self.quantity == 0
+    end
+
   end
 
 end
