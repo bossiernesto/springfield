@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/bossiernesto/small_reactor.png?label=ready&title=Ready)](https://waffle.io/bossiernesto/small_reactor)
 Small Reactor
 ==========
 
