@@ -7,3 +7,8 @@ Small Reactor
 [![Build Status](https://travis-ci.org/bossiernesto/small_reactor.svg?branch=master)](https://travis-ci.org/bossiernesto/small_reactor)
 
 Small reactor library done in Ruby
+
+~~~ruby
+class A
+end
+~~~
