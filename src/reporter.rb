@@ -3,16 +3,35 @@ require 'time'
 
 module Reactor
   class Reporter
+    def self.format_report(msg, type, color)
+      puts "[#{Time.now.iso8601} - #{type}] #{msg}".colorize(:color => color, :background => :black)
+    end
+
     def self.report_error(msg)
-      puts "[#{Time.now.iso8601} - Error] #{msg}".colorize(:color => :red, :background => :black)
+      self.format_report msg, 'Error', :red
     end
 
     def self.report_info(msg)
-      puts "[#{Time.now.iso8601} - Info] #{msg}".colorize(:color => :cyan, :background => :black)
+      self.format_report msg, 'Info', :cyan
     end
 
     def self.report_system(msg)
-      puts "[#{Time.now.iso8601} - System] #{msg}".colorize(:color => :green, :background => :black)
+      self.format_report msg, 'System', :green
+    end
+  end
+
+  module Logger
+    def report_error(msg)
+      Reactor::Reporter.report_error msg if self.debug
+    end
+
+    def report_info(msg)
+      Reactor::Reporter.report_info msg if self.debug
+    end
+
+    def report_system(msg)
+      Reactor::Reporter.report_system msg if self.debug
     end
   end
 end
+

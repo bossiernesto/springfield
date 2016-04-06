@@ -3,6 +3,7 @@ require_relative '../src/orderedarray'
 require_relative '../src/reporter'
 require_relative '../src/abstract'
 require_relative '../src/reactor_exceptions'
+require_relative '../src/timeable'
 
 DEFAULT_QUANTUM = 10 #Time in milliseconds
 
@@ -69,15 +70,10 @@ module Reactor
   end
 
   class TimedEvent < TaskEvent
-    attr_accessor :timers
-
-    def initialize(timer, &block)
-      self.timers = OrderedArray.new
-      self.callbacks = [block]
-    end
+    include Timeable
 
     def execute
-      unless self.timers.all? { |timer| timer.complies }
+      unless self.all_timers_comply?
         return
       end
 
@@ -85,19 +81,6 @@ module Reactor
       self.timers.each { |timer| timer.consume }
       self.timers.sort
     end
-
-    def add_quantum_timer(quantum, repeatable=false)
-      QuantumTimer.new self, quantum, repeatable
-    end
-
-    def add_timestamp_timer(time, repeatable=false)
-      TimestampTimer.new self, time, repeatable
-    end
-
-    def add_time_timer(time, repeatable=false)
-      Timer.new self, time, repeatable
-    end
-
   end
 
   class IOEvent < BaseEvent
@@ -187,6 +170,7 @@ module Reactor
   end
 
   class Dispatcher
+    include Logger
 
     attr_accessor :running, :handler_manager_read, :handler_manager_write, :handler_manager_error, :handler_manager_tasks, :on_attach, :on_detach, :ios, :quantum, :debug
 
@@ -344,19 +328,6 @@ module Reactor
       mode == :tasks
     end
 
-    def report_error(msg)
-      Reactor::Reporter.report_error msg if self.debug
-    end
-
-    def report_info(msg)
-      Reactor::Reporter.report_info msg if self.debug
-    end
-
-    def report_system(msg)
-      Reactor::Reporter.report_system msg if self.debug
-    end
-
-
     #Methods for managing the listeners
     def has_listeners(listener_list)
       listener_list.length > 0
@@ -400,6 +371,7 @@ module Reactor
   end
 
   class Listener
+    include Logger
     attr_accessor :callback, :name, :run_once
 
     def initialize(name, run_once, &block)
@@ -411,7 +383,7 @@ module Reactor
     def check_block_arity &block
       unless block.parameters.length == 2
         msg = "Block #{block} has not 2 parameters. Listener blocks must respect the following contract proc {|mode, io| ...}"
-        Reactor::Reporter.report_error msg
+        self.report_error msg
         raise ListenerException msg
       end
     end
