@@ -111,8 +111,9 @@ module Reactor
           if event.io == io
             return event
           end
-        rescue NoMethodError => e
+        rescue NoMethodError
           #Don't do anything just let it pass, log the error on debug
+          Reporter.report_error "Event #{event} of type #{event.class} has no knowledge of IO Events."
         end
       end
       nil
@@ -122,7 +123,7 @@ module Reactor
       self.events = []
     end
 
-    def attach(wait_if_attached=true, &callback)
+    def attach(_wait_if_attached=true, &callback)
       self.events << (TaskEvent.new &callback)
     end
 
@@ -178,10 +179,10 @@ module Reactor
     def initialize(debug=false, quantum=DEFAULT_QUANTUM)
       self.debug = debug
       #State for manager lists
-      self.handler_manager_read = EventHandlerManager.new :read, debug = self.debug
-      self.handler_manager_write = EventHandlerManager.new :write, debug = self.debug
-      self.handler_manager_error = EventHandlerManager.new :error, debug = self.debug
-      self.handler_manager_tasks = EventHandlerManager.new :tasks, debug=self.debug, io_allowed=false
+      self.handler_manager_read = EventHandlerManager.new :read, self.debug
+      self.handler_manager_write = EventHandlerManager.new :write, self.debug
+      self.handler_manager_error = EventHandlerManager.new :error, self.debug
+      self.handler_manager_tasks = EventHandlerManager.new :tasks, self.debug, false
 
       #process queue
       self.ios= []
