@@ -12,6 +12,7 @@ describe 'Signal Handler testing' do
 
     Reactor::SignalHandler.define_trap(:TERM) do
       puts 'Exiting'
+      exit
     end
     expect(Reactor::SignalHandler).to receive(:define_trap).with array_including(:TERM)
     Process.kill 'TERM', 0 # Send the signal to ourself
@@ -25,6 +26,7 @@ describe 'Signal Handler testing' do
 
     Reactor::SignalHandler.define_term_trap do
       puts 'Exiting'
+      exit
     end
     expect(Reactor::SignalHandler).to receive(:define_term_trap)
     Process.kill 'TERM', 0 # Send the signal to ourself

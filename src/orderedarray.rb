@@ -32,10 +32,6 @@ module Reactor
     alias push <<
     alias shift <<
 
-    def binary_insert(a, e)
-
-    end
-
   end
 
 end
