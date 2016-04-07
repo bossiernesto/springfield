@@ -7,4 +7,7 @@ module Reactor
 
   class ReactorException < StandardError
   end
+
+  class TimeableException < StandardError
+  end
 end
