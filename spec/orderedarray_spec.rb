@@ -5,7 +5,7 @@ require_relative '../src/orderedarray'
 describe 'Test Ordered Array' do
 
   it 'add a value to empty array' do
-    array = Reactor::OrderedArray.new
+    array = OrderedArray.new
 
     array << 1
 
@@ -13,7 +13,7 @@ describe 'Test Ordered Array' do
   end
 
   it 'add a value between two values' do
-    array = Reactor::OrderedArray.new [1, 2, 3]
+    array = OrderedArray.new [1, 2, 3]
     array << 5
     array << 4
 
@@ -22,7 +22,7 @@ describe 'Test Ordered Array' do
   end
 
   it 'Add strings to an ordered array' do
-    array = Reactor::OrderedArray.new ['a', 'b']
+    array = OrderedArray.new ['a', 'b']
     array << 'ccc'
     array << 'z'
 
