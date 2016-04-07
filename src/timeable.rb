@@ -29,7 +29,7 @@ module Reactor
     end
 
     def add_time_timer(time, repeatable=false)
-      timer = Reactor::Timer.new time, self, repeatable
+      Reactor::Timer.new time, self, repeatable
     end
 
   end

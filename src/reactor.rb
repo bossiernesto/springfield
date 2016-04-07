@@ -11,7 +11,8 @@ DEFAULT_QUANTUM = 10 #Time in milliseconds
 module Reactor
 
   class BaseEvent
-    attr_accessor :status, :valid_statuses, :callbacks
+    attr_writer :callbacks
+    attr_accessor :status, :valid_statuses
 
     def initialize_status
       self.status = :clean
