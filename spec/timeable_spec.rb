@@ -52,4 +52,41 @@ describe 'Add timeable specs' do
     sleep 8
     expect(timer_manager.all_timers_comply?).to eq(true)
   end
+
+  it 'compare timers, test 2' do
+    timer = Reactor::QuantumTimer.new 3
+    timer_2 = Reactor::Timer.new 10 #set to 10 second to comply
+    expect(timer_2 > timer).to eq(true)
+    sleep(12)
+    expect(timer_2.complies).to eq(true)
+    expect(timer_2 > timer).to eq(true)
+  end
+
+  it 'quantum timer complies test' do
+    timer = Reactor::QuantumTimer.new 3
+    expect(timer.complies).to eq(false)
+    expect(timer.complies).to eq(false)
+    expect(timer.complies).to eq(true)
+    expect(timer.passes).to eq(3)
+  end
+
+  it 'quantum cyclic timer test' do
+    timer = Reactor::QuantumTimer.new 2, nil, true
+    expect(timer.complies).to eq(false)
+    expect(timer.complies).to eq(true)
+    expect(timer.passes).to eq(2)
+    expect(timer.complies).to eq(false)
+    expect(timer.complies).to eq(true)
+    expect(timer.passes).to eq(4)
+  end
+
+  it 'timer repeatable' do
+    timer = Reactor::Timer.new 10, nil, true
+    expect(timer.complies).to eq(false)
+    sleep(10)
+    expect(timer.complies_and_consume).to eq(true)
+    expect(timer.complies).to eq(false)
+    sleep(10)
+    expect(timer.complies).to eq(true)
+  end
 end

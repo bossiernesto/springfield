@@ -61,6 +61,12 @@ module Reactor
       super
     end
 
+    def complies_and_consume
+      cmp = self.complies
+      self.consume if cmp
+      cmp
+    end
+
     def complies
       _comparable_time_to_i(Time.now) >= self.fire_time
     end
@@ -92,8 +98,8 @@ module Reactor
 
     def initialize(quantity, contained_in=nil, repeatable=false)
       self.passes = 0
-      self.comparable_time = Time.now
-      self.quantity if quantity.is_a? Integer
+      self.comparable_time = self._comparable_time_to_i Time.now
+      self.quantity=quantity if quantity.is_a? Integer
       self.repeatable = repeatable
 
       unless contained_in.nil?
@@ -103,6 +109,7 @@ module Reactor
     end
 
     def complies
+      return false if self.passes > self.quantity and not repeatable
       self.passes += 1
       self.passes % self.quantity == 0
     end
