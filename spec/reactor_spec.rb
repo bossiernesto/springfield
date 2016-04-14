@@ -2,7 +2,6 @@ require 'rspec'
 require_relative '../src/reactor'
 
 
-
 describe 'test reactor core' do
 
   before do
@@ -11,7 +10,7 @@ describe 'test reactor core' do
 
   it 'test write some content with a write event' do
     buffer = ''
-    @reactor.attach_handler(:write,STDOUT)  do
+    @reactor.attach_handler(:write, STDOUT) do
       buffer << 'Hola Mundo!'
     end
     @reactor.run_cycle
