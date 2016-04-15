@@ -13,6 +13,7 @@ describe 'Signal Handler testing' do
         exit
       end
       expect(Reactor::SignalHandler).to receive(:define_trap).with array_including(:TERM)
+      Signal.should_receive(:trap).at_most(1).times
     end
 
     Process.detach(pid)
@@ -25,6 +26,7 @@ describe 'Signal Handler testing' do
         exit
       end
       expect(Reactor::SignalHandler).to receive(:define_term_trap)
+      Signal.should_receive(:trap).at_most(1).times
     end
 
     Process.detach(pid)
