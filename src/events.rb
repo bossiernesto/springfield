@@ -1,5 +1,3 @@
-
-
 module Reactor
   class BaseEvent
     attr_writer :callbacks
