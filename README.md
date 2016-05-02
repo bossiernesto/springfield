@@ -1,4 +1,4 @@
-Small Reactor
+Springfield
 ==========
 
 [![Code Climate](https://codeclimate.com/github/bossiernesto/small_reactor/badges/gpa.svg)](https://codeclimate.com/github/bossiernesto/small_reactor)
