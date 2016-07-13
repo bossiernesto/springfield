@@ -8,7 +8,7 @@ Springfield
 [![Test Coverage](https://codeclimate.com/github/bossiernesto/small_reactor/badges/coverage.svg)](https://codeclimate.com/github/bossiernesto/small_reactor/coverage)
 
 
-<img src="/https://github.com/bossiernesto/springfield/raw/master/Springfield_Nuclear_Power_Plant.png" alt="" style="max-width:40%;">
+<img src="https://github.com/bossiernesto/springfield/raw/master/Springfield_Nuclear_Power_Plant.png" alt="" style="50">
 
 Small reactor library done in Ruby
 
