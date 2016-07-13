@@ -7,7 +7,7 @@ Springfield
 [![Build Status](https://travis-ci.org/bossiernesto/springfield.svg?branch=master)](https://travis-ci.org/bossiernesto/springfield)
 [![Test Coverage](https://codeclimate.com/github/bossiernesto/small_reactor/badges/coverage.svg)](https://codeclimate.com/github/bossiernesto/small_reactor/coverage)
 
-!(/Springfield_Nuclear_Power_Plant.png)
+![](/Springfield_Nuclear_Power_Plant.png)
 
 Small reactor library done in Ruby
 
