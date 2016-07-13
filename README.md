@@ -11,6 +11,5 @@ Springfield
 
 Small reactor library done in Ruby
 
-Currently on work.
-
+In the works currently. Will update with the basic api soon.
 
