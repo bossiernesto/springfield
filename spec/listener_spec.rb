@@ -1,23 +1,30 @@
 require 'rspec'
 require_relative '../src/reactor_exceptions'
 require_relative '../src/listener'
+require_relative '../src/utils'
+
 
 describe 'Listener Specs' do
 
   context 'Failing tests' do
 
     it 'should fail with invalid block arity' do
-      expect{Reactor::Listener.new 'testListener', true, true do |a|
-        a
-      end}.to raise_error Reactor::ListenerException
-      expect(STDOUT).to receive(:puts).at_most(1).times
+      silence_streams STDOUT do
+        expect { Reactor::Listener.new 'testListener', true, true do |a|
+          a
+        end }.to raise_error Reactor::ListenerException
+        expect(STDOUT).to receive(:puts).at_most(1).times
+      end
     end
 
     it 'should put a warning with a valid block arity but not in term of parameter names' do
-      Reactor::Listener.new 'testListener', true, true do |a, io|
-        a
+      silence_streams STDOUT do
+
+        Reactor::Listener.new 'testListener', true, true do |a, io|
+          a
         end
-      expect(STDOUT).to receive(:puts).at_most(1).times
+        expect(STDOUT).to receive(:puts).at_most(1).times
+      end
     end
 
   end

@@ -14,10 +14,11 @@ describe 'test reactor core' do
       buffer << 'Hola Mundo!'
     end
     @reactor.run_cycle
+    expect(@reactor).to be_truthy
     expect(buffer).to eq('Hola Mundo!')
   end
 
-  it '' do
+  it 'change quantum' do
     expect(@reactor.quantum).to eq(DEFAULT_QUANTUM)
     @reactor.change_reactor_quantum 234
     expect(@reactor.quantum).to eq(234)

@@ -43,31 +43,28 @@ describe 'test reporter module' do
 
     end
 
-    it 'should log info' do
-      instance = UsingLogger.new
+    let(:instance) { UsingLogger.new }
 
+    it 'should log info' do
       expect(STDOUT).to receive(:puts).at_most(1).times.with("\e[0;36;40m[Info] some msg\e[0m")
-      instance.report_info 'some msg', false
+
+      silence_streams STDOUT do
+        instance.report_info 'some msg', false
+      end
     end
 
     it 'should log warning' do
-      instance = UsingLogger.new
-
       expect(STDOUT).to receive(:puts).at_most(1).times.with("\e[0;33;40m[Warning] some msg\e[0m")
       instance.report_warning 'some msg', false
     end
 
 
     it 'should log error' do
-      instance = UsingLogger.new
-
       expect(STDOUT).to receive(:puts).at_most(1).times.with("\e[0;31;40m[Error] some msg\e[0m")
       instance.report_error 'some msg', false
     end
 
     it 'should log system' do
-      instance = UsingLogger.new
-
       expect(STDOUT).to receive(:puts).at_most(1).times.with("\e[0;32;40m[System] some msg\e[0m")
       instance.report_system 'some msg', false
     end

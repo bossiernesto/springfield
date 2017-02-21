@@ -1,3 +1,5 @@
+require_relative 'timeable'
+
 module Reactor
   class BaseEvent
     attr_writer :callbacks
@@ -14,7 +16,7 @@ module Reactor
 
     def change_status(status)
       unless self.valid_statuses.include? status
-        raise ReactorException, 'Invalid status'
+        raise ReactorException.new 'Invalid status'
       end
       self.status = status
     end
@@ -32,7 +34,7 @@ module Reactor
     end
 
     def remove_last_callback
-      self.callbacks.delete self.callbacks[-1]
+      self.callbacks.delete self.callbacks[-1] if self.has_callbacks?
     end
 
     def add_callback(wait_if_attached, &callback)
@@ -49,6 +51,7 @@ module Reactor
     attr_accessor :block
 
     def initialize(&block)
+      self.initialize_status
       self.callbacks = [block]
     end
 
