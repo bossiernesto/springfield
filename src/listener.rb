@@ -38,7 +38,7 @@ module Reactor
     end
 
     def call(*args)
-      self.callback.call *args
+      self.callback.call(*args)
     end
 
   end

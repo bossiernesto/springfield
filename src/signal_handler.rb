@@ -16,15 +16,15 @@ module Reactor
       self.define_trap :TERM, &block
     end
 
-    protected
+    private
 
     def self.format_signal_type(type)
       type.is_a?(Symbol) ? type.to_s : type
     end
 
     def self.valid_trap?(type)
-      _type = self.format_signal_type type
-      Signal.list.include? _type
+      formatted_type = self.format_signal_type type
+      Signal.list.include? formatted_type
     end
   end
 
