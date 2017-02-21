@@ -1,5 +1,3 @@
-
-
 def get_dev_null
   RUBY_PLATFORM =~ /mswin/ ? 'NUL:' : '/dev/null'
 end

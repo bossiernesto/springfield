@@ -108,12 +108,17 @@ module Reactor
       self.events = []
     end
 
+    def is_event_included(needed_event)
+      self.events.each do |event|
+        return true if event == needed_event
+      end
+      false
+    end
+
     def is_io_included(io)
       self.events.each do |event|
         begin
-          if event.io == io
-            return event
-          end
+          return event if event.is_a? IOEvent and event.io == io
         rescue NoMethodError
           #Don't do anything just let it pass, log the error on debug
           Reporter.report_error "Event #{event} of type #{event.class} has no knowledge of IO Events."
@@ -149,7 +154,7 @@ module Reactor
       end
 
       self.events.delete(event)
-      self.change_status :dirty
+      event.change_status :dirty
 
     end
 

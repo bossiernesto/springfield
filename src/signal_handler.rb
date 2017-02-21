@@ -16,8 +16,6 @@ module Reactor
       self.define_trap :TERM, &block
     end
 
-    private
-
     def self.format_signal_type(type)
       type.is_a?(Symbol) ? type.to_s : type
     end
