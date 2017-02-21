@@ -10,4 +10,7 @@ module Reactor
 
   class TimeableException < StandardError
   end
+
+  class SignalHandlerException < StandardError
+  end
 end

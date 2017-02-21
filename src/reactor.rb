@@ -177,12 +177,12 @@ module Reactor
     end
 
     def add_detach_listener(name, run_once=false, &block)
-      listener = Listener.new name, run_once, &block
+      listener = Listener.new name, run_once, self.debug, &block
       self.on_detach << listener
     end
 
     def add_attach_listener(name, run_once=false, &block)
-      listener = Listener.new name, run_once, &block
+      listener = Listener.new name, run_once, self.debug, &block
       self.on_attach << listener
     end
 
