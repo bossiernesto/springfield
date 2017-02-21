@@ -117,12 +117,7 @@ module Reactor
 
     def is_io_included(io)
       self.events.each do |event|
-        begin
-          return event if event.is_a? IOEvent and event.io == io
-        rescue NoMethodError
-          #Don't do anything just let it pass, log the error on debug
-          Reporter.report_error "Event #{event} of type #{event.class} has no knowledge of IO Events."
-        end
+        return event if event.is_a? IOEvent and event.io == io
       end
       nil
     end
