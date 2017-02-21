@@ -54,4 +54,16 @@ describe 'Signal Handler testing' do
 
     Process.kill :INT, pid # Send the signal to ourself
   end
+
+  it 'same if we call define_trap method' do
+    pid = fork do
+      Reactor::SignalHandler.define_trap :QUIT do
+        a = 1
+      end
+      expect(Reactor::SignalHandler).to receive(:define_trap).at_most(1).times
+      Signal.should_receive(:trap).at_most(1).times
+    end
+
+    Process.kill :QUIT, pid # Send the signal to ourself
+  end
 end
