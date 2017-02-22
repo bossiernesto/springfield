@@ -20,9 +20,7 @@ module Reactor
 
     def check_block_arity(&block)
       unless block.parameters.length == 2
-        msg = "Block #{block} has not 2 parameters. Listener blocks must respect the following contract proc {|mode, io| ...}"
-        self.report_error msg
-        raise Reactor::ListenerException.new msg
+        self.report_invalid_arity block
       end
 
       block_params = block.parameters.flat_map { |param| param[1] }
@@ -39,6 +37,14 @@ module Reactor
 
     def call(*args)
       self.callback.call(*args)
+    end
+
+    protected
+
+    def report_invalid_arity(block)
+      msg = "Block #{block} has not 2 parameters. Listener blocks must respect the following contract proc {|mode, io| ...}"
+      self.report_error msg
+      raise Reactor::ListenerException.new msg
     end
 
   end

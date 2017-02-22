@@ -46,6 +46,7 @@ module Reactor
       unless new_timeout.is_a? Integer
         msg = "Can not set a non integer value as a valid quantum time. Leaving the quantum in #{self.quantum}"
         self.report_error msg
+        return
       end
       self.quantum = new_timeout
       self.report_system "Changing quantum of reactor to #{new_timeout} milliseconds"
@@ -84,7 +85,7 @@ module Reactor
 
     def attach_io(handler, mode, io, wait_if_attached = true, &callback)
       handler.attach_io io, wait_if_attached, &callback
-      self.process_on_attach mode, io if self.has_listeners self.on_attach
+      self.process_on_attach mode, io if self.has_listeners :attach
     end
 
     def attach_handler(mode, io=nil, wait_if_attached = true, &callback)
@@ -116,7 +117,7 @@ module Reactor
       self.report_system "Detaching handler #{handler}"
       handler_manager.detach handler, force
 
-      self.process_on_detach mode, io if self.has_listeners self.on_detach
+      self.process_on_detach mode, io if self.has_listeners :detach
     end
 
     def detach_all_handlers(mode)
@@ -172,17 +173,22 @@ module Reactor
     end
 
     #Methods for managing the listeners
-    def has_listeners(listener_list)
-      listener_list.length > 0
+    def has_listeners(listener)
+      list_instance = self.instance_variable_get("@on_#{listener}")
+      list_instance.length > 0
+    end
+
+    def has_listeners?
+      (self.on_attach + self.on_detach).length > 0
     end
 
     def add_detach_listener(name, run_once=false, &block)
-      listener = Listener.new name, run_once, self.debug, &block
+      listener = Listener.new(name, run_once, self.debug, &block)
       self.on_detach << listener
     end
 
     def add_attach_listener(name, run_once=false, &block)
-      listener = Listener.new name, run_once, self.debug, &block
+      listener = Listener.new(name, run_once, self.debug, &block)
       self.on_attach << listener
     end
 

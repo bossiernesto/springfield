@@ -6,7 +6,16 @@ require_relative '../src/utils'
 
 describe 'Listener Specs' do
 
+
   context 'Failing tests' do
+
+    it 'should fail with invalid Proc block arity' do
+      callback = Proc.new { 232 }
+      silence_streams STDOUT do
+        expect { Reactor::Listener.new('testListener', true, true, &callback) }.to raise_error Reactor::ListenerException
+        expect(STDOUT).to receive(:puts).at_most(1).times
+      end
+    end
 
     it 'should fail with invalid block arity' do
       silence_streams STDOUT do
@@ -43,6 +52,20 @@ describe 'Listener Specs' do
       listener.call :mode, :io
 
       expect(external_variable).to eq 1
+
+    end
+
+    it 'success wit proc' do
+      external_variable = 323
+      callback = Proc.new { |mode, io| external_variable = 1 }
+
+      silence_streams STDOUT do
+        listener = Reactor::Listener.new('testListener', true, true, &callback)
+
+        listener.call :mode, :io
+
+        expect(external_variable).to eq 1
+      end
 
     end
 
