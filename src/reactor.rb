@@ -12,8 +12,57 @@ DEFAULT_QUANTUM = 10 #Time in milliseconds
 
 module Reactor
 
+  module ListenerManager
+
+    def has_listeners(listener)
+      list_instance = self.instance_variable_get("@on_#{listener}")
+      list_instance.length > 0
+    end
+
+    def has_listeners?
+      (self.on_attach + self.on_detach).length > 0
+    end
+
+    def add_detach_listener(name, run_once=false, &block)
+      listener = Listener.new(name, run_once, self.debug, &block)
+      self.on_detach << listener
+    end
+
+    def add_attach_listener(name, run_once=false, &block)
+      listener = Listener.new(name, run_once, self.debug, &block)
+      self.on_attach << listener
+    end
+
+    def remove_all_attach_listeners
+      self.on_attach.clear
+    end
+
+    def remove_all_detach_listeners
+      self.on_detach.clear
+    end
+
+    def abstract_process_listeners(listener_list, mode, io=nil)
+      listener_list.each do |listener|
+        listener.call mode, io
+        listener_list.delete listener if listener.run_once?
+      end
+
+    end
+
+    def process_on_attach(mode, io=nil)
+      self.abstract_process_listeners self.on_attach, mode, io
+    end
+
+
+    def process_on_detach(mode, io=nil)
+      self.abstract_process_listeners self.on_detach, mode, io
+    end
+  end
+
   class Dispatcher
     include Logger
+    #Methods for managing the listeners
+    include ListenerManager
 
     attr_accessor :running, :handler_manager_read, :handler_manager_write, :handler_manager_error, :handler_manager_tasks, :on_attach, :on_detach, :ios, :quantum, :debug
 
@@ -79,13 +128,14 @@ module Reactor
       fire_task_events
     end
 
-    def attach_task(handler, wait_if_attached=true, &callback)
-      handler.attach wait_if_attached, &callback
-    end
 
     def attach_io(handler, mode, io, wait_if_attached = true, &callback)
-      handler.attach_io io, wait_if_attached, &callback
+      handler.attach_io(io, wait_if_attached, &callback)
       self.process_on_attach mode, io if self.has_listeners :attach
+    end
+
+    def attach_periodical_block(quantums, &callback)
+      self.handler_manager_tasks.attach_periodical_handler(quantums, &callback)
     end
 
     def attach_handler(mode, io=nil, wait_if_attached = true, &callback)
@@ -99,20 +149,19 @@ module Reactor
 
       if mode_is_task(mode)
         self.report_system "Attaching callback to tasks"
-        self.attach_task handler_manager, wait_if_attached, &callback
+        handler_manager.attach(wait_if_attached, &callback)
       else
         self.report_system "Attaching callback to io #{io}"
-        self.attach_io handler_manager, mode, io, wait_if_attached, &callback
+        self.attach_io(handler_manager, mode, io, wait_if_attached, &callback)
       end
     end
 
     def detach_handler(mode, io, force=False)
       handler_manager = get_handler_manager mode
       handler = handler_manager.is_io_included io
-      unless handler
-        #The io doesn't exits anymore
-        return
-      end
+
+      #The io doesn't exits anymore
+      return unless handler
 
       self.report_system "Detaching handler #{handler}"
       handler_manager.detach handler, force
@@ -156,6 +205,8 @@ module Reactor
       ios.each { |io| self.process_io io }.clear
     end
 
+    protected
+
     def process_io(io)
       io[1].call io[0], self
     end
@@ -170,51 +221,6 @@ module Reactor
 
     def mode_is_task(mode)
       mode == :tasks
-    end
-
-    #Methods for managing the listeners
-    def has_listeners(listener)
-      list_instance = self.instance_variable_get("@on_#{listener}")
-      list_instance.length > 0
-    end
-
-    def has_listeners?
-      (self.on_attach + self.on_detach).length > 0
-    end
-
-    def add_detach_listener(name, run_once=false, &block)
-      listener = Listener.new(name, run_once, self.debug, &block)
-      self.on_detach << listener
-    end
-
-    def add_attach_listener(name, run_once=false, &block)
-      listener = Listener.new(name, run_once, self.debug, &block)
-      self.on_attach << listener
-    end
-
-    def remove_all_attach_listeners
-      self.on_attach.clear
-    end
-
-    def remove_all_detach_listeners
-      self.on_detach.clear
-    end
-
-    def abstract_process_listeners(listener_list, mode, io=nil)
-      listener_list.each do |listener|
-        listener.call mode, io
-        listener_list.delete listener if listener.run_once?
-      end
-
-    end
-
-    def process_on_attach(mode, io=nil)
-      self.abstract_process_listeners self.on_attach, mode, io
-    end
-
-
-    def process_on_detach(mode, io=nil)
-      self.abstract_process_listeners self.on_detach, mode, io
     end
 
   end

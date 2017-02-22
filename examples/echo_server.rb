@@ -13,6 +13,9 @@ reactor.attach_handler(:read, server) do |my_server|
   conn.write("HTTP/1.1 200 OK\r\nContent-Length:#{buffer.length}\r\nContent-Type:text/plain\r\n\r\n#{buffer}")
   conn.close
 end
+reactor.attach_periodical_block 100 do
+  puts 'Periodical event per quantum'
+end
 reactor.attach_handler(:read, STDIN) do
   data = gets
   puts data
