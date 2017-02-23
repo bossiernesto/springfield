@@ -127,7 +127,7 @@ module Reactor
     end
 
     def attach_periodical_handler(quantum=1, &callback)
-      event = TimedEvent.new &callback
+      event = TimedEvent.new(&callback)
       event.add_quantum_timer quantum, true
 
       self.events << event
