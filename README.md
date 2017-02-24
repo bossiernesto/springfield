@@ -9,7 +9,26 @@ Springfield
 
 <img src="https://raw.githubusercontent.com/bossiernesto/springfield/master/Springfield_Nuclear_Power_Plant.png" width="410" height="303">
 
-Small reactor library done in Ruby
+Small event loop using the reactor pattern. My idea is to have a very simplistic event loop oriented mostly on tcp and ip connections
 
-In the works currently. Will update with the basic api soon.
+## Current work
+
+Currently the base event loop is stable and working properly. Unit tests have been created to cover mostly all the code. Some more work 
+on keeping the code tested is still needed though. 
+
+The event loop has 
+
+- *Events* that can be simple or IO tasks, these tasks can be timed
+- *Timers* are behaviour that can be added to an event and there are different types of timers (quantum, timestamp)
+- *Listeners* are blocks that execute a block when an event is attached or detached. 
+
+And soon the event loop will also have
+
+- TCP/IP connections and servers
+- Heartbeat
+- Failover/Takeover
+
+## Api
+
+Will update with the basic api soon.
 
