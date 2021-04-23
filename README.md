@@ -25,7 +25,7 @@ The event loop has
 And soon the event loop will also have
 
 - TCP/IP connections and servers
-- Heartbeat
+- HTTP connections.. (?)
 - Failover/Takeover
 
 ## Api
